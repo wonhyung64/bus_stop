@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+import re
 
 # %%
 def preprocess_scheme1(df):
@@ -48,14 +49,9 @@ tmp = headers2[0].split(",")
 ([tmp[0], ''] + tmp[1:]).join(",")
 tmp2 = ",".join([tmp[0], ''] + tmp[1:])
 
-import re
-pattern = "(*,*,*)"
+#%%
+tmp2 = "asdoif,joqwijroij(asdofijoqw,qwoeijro,qwoeirj)dkasjfoi,qjweroij"
+
 rmve_bracket = "\(.*\)|\s-\s.*" 
 tmp3 = re.sub(",", ".", re.findall(r'\(.*\)', tmp2)[0])
 re.sub(rmve_bracket, tmp3, tmp2)
-
-remain_brakcet = r'\(([^)]+)'
-
-# re.findall(텍스트 구성, 찾을 텍스트)
-# findall() 함수는 list형식으로 저장되어, 이후에 0번째 리스트만 추출하면 된다.
-eng_temp = re.findall(remain_brakcet, tmp2)[0]

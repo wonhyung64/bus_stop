@@ -1,6 +1,7 @@
 #%%
 import os
 import sys
+import csv
 import numpy as np
 import pandas as pd
 import re
@@ -15,43 +16,37 @@ def preprocess_scheme1(df):
 
     return df
 
-tmp = os.listdir("./data")[1]
-df = pd.read_csv(f"./data/{tmp}", encoding="cp949", index_col=False, error_bad_lines=False)
+tmp = os.listdir("./data")[-3]
+tmp = os.listdir("./data")[2]
+tmp = clean_file(tmp)
+df = pd.read_csv(f"./data/{tmp}", encoding="utf-8-sig", index_col=False)
 df.info()
-df[df=="종로2가사거리"]
 
 df = preprocess_scheme1(df)
 df.info()
 [df[column].dtypes for column in df.columns[8:-1].to_list()]
 
-df[]
-
-df.columns
-pd.__version__
 
 
-
-
-
-
-.str.split()
-
-df.loc[[0]]
-df.loc[[0,1,2]]
-#%%
-import csv
-with open(f"./data/{tmp}", "r", encoding="cp949") as f:
-    reader = csv.reader(f, delimiter=";")
-    headers = next(reader)
-    headers2 = next(reader)
-
-tmp = headers2[0].split(",")
-([tmp[0], ''] + tmp[1:]).join(",")
-tmp2 = ",".join([tmp[0], ''] + tmp[1:])
 
 #%%
-tmp2 = "asdoif,joqwijroij(asdofijoqw,qwoeijro,qwoeirj)dkasjfoi,qjweroij"
+def clean_file(dirty_file):
+    file_name = f"/modified_{dirty_file}"
 
-rmve_bracket = "\(.*\)|\s-\s.*" 
-tmp3 = re.sub(",", ".", re.findall(r'\(.*\)', tmp2)[0])
-re.sub(rmve_bracket, tmp3, tmp2)
+    with open(f"./data/{file_name}", "w", encoding="utf-8-sig", newline="") as csvfile:
+        row_writer = csv.writer(csvfile, delimiter=',')
+
+        with open(f"./data/{tmp}", "r", encoding="cp949") as f:
+            readers = csv.reader(f, delimiter=";")
+            for step, reader in enumerate(readers):
+                row = reader[0].split(",")
+                if step != 0: 
+                    row = ",".join([row[0], ''] + row[1:])
+                    row = re.sub(r'\([^()]+\)', lambda x: x.group(0).replace(",", "."), row)
+                    row = re.sub(r"[가-힣]\,[가-힣]", lambda x: x.group(0).replace(",", "."), row)
+                    row = row.split(",")
+                row_writer.writerow(row)
+
+    return file_name
+
+#%%

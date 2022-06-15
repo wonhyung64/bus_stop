@@ -1,9 +1,9 @@
 import os
-import tqdm
 import csv
 import re
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 
 def fetch_scheme1(data_dir, encoding):

@@ -36,17 +36,7 @@ if __name__ == "__main__":
     df_businfo.columns = ["버스정류장ARS번호", "구명칭", "동명칭"]
 
     df_scheme1 = pd.merge(df_scheme1, df_businfo, how="left")
-    df_scheme1["버스정류장ARS번호_Text"] = (
-        df_scheme1["버스정류장ARS번호"]
-        .astype("string")
-        .str.pad(width=5, side="left", fillchar="0")
-    )
     df_scheme1.to_csv(df_scheme1_dir, index=False)
 
     df_scheme2 = pd.merge(df_scheme2, df_businfo, how="left")
-    df_scheme2["버스정류장ARS번호_Text"] = (
-        df_scheme2["버스정류장ARS번호"]
-        .astype("string")
-        .str.pad(width=5, side="left", fillchar="0")
-    )
     df_scheme2.to_csv(df_scheme2_dir, index=False)

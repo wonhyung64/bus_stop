@@ -2,6 +2,7 @@
 import os
 import openpyxl
 import pandas as pd
+import scipy.stats
 from utils import (
     fetch_scheme1,
     fetch_scheme2,
@@ -52,24 +53,41 @@ if __name__ == "__main__":
     df_scheme2_dir = f"{data_dir}/정류소별 승차정보_02파일"
     df_businfo_dir = f"{data_dir}/버스위치정보"
     df = load_df(data_dir, encoding, df_scheme1_dir, df_scheme2_dir, df_businfo_dir)
-    
     df["버스정류장ARS번호_Text"] = (
         df["버스정류장ARS번호"].astype("string").str.pad(width=5, side="left", fillchar="0")
     )
+
     smpl_tmp = df[df["구명칭"] == "성동구"]
 
     rest_lst_dir = f"{data_dir}/스마트쉼터.xlsx"
     rest_lst = pd.read_excel(rest_lst_dir, header=None)[0].to_list()
     rest_lst = [f"{string:0>5}" for string in rest_lst]
-    
+
+    # 코로나 영향 보기
     smpl = smpl_tmp[~smpl_tmp["버스정류장ARS번호_Text"].isin(rest_lst)]
     
     smpl_group = smpl.groupby(["사용년월", "버스정류장ARS번호_Text"], as_index=False).sum()
     smpl_group["총승차승객수"] = sum([smpl_group.iloc[:,i] for i in range(4,29) if i % 2 ==0])
     smpl_group = smpl_group[["사용년월", "버스정류장ARS번호_Text", "총승차승객수"]]
-    smpl_rc = smpl_group.pivot(index="버스정류장ARS번호_Text", columns="사용년월", values="총승차승객수")
-    smpl_rc = smpl_rc.dropna()
-    smpl_rc
+    smpl_rc = smpl_group.pivot(index="버스정류장ARS번호_Text", columns="사용년월", values="총승차승객수").loc[:, "201901":"202205"].dropna()
+    smpl1 = smpl_rc.loc[:,:"202005"]
+    smpl2 = smpl_rc.loc[:,"202101":"202205"]
+    mu_1 = smpl1.mean(axis=1).to_list()
+
+    mu_2 = smpl2.mean(axis=1).to_list()
+    sum([mu_1[i] - mu_2[i] for i in range(len(mu_1))]) / len(mu_1)
+import matplotlib.pyplot as plt
+    plt.hist(mu_1, bins=1000)
+
+
+
+    scipy.stats.levene(mu_1, mu_2)
+    scipy.stats.ttest_ind(mu_1, mu_2, equal_var=False)
+    scipy.stats.ttest_rel(mu_1, mu_2)
+
+    
+
+
 
 
 # %%

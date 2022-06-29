@@ -2,11 +2,15 @@
 import os
 import openpyxl
 import pandas as pd
+import matplotlib.pyplot as plt
 import scipy.stats
 from utils import (
     fetch_scheme1,
     fetch_scheme2,
     fetch_businfo,
+    plugin_neptune,
+    NEPTUNE_API_KEY,
+    NEPTUNE_PROJECT,
 )
 
 def load_df(data_dir, encoding, df_scheme1_dir, df_scheme2_dir, df_businfo_dir):
@@ -45,8 +49,28 @@ def load_df(data_dir, encoding, df_scheme1_dir, df_scheme2_dir, df_businfo_dir):
 
     return df_scheme1
 
+
+def paired_ttest(smpl, per_bef, per_aft):
+    smpl_group = smpl.groupby(["사용년월", "버스정류장ARS번호_Text"], as_index=False).sum()
+    smpl_group["총승차승객수"] = sum([smpl_group.iloc[:,i] for i in range(4,29) if i % 2 ==0])
+    smpl_group = smpl_group[["사용년월", "버스정류장ARS번호_Text", "총승차승객수"]]
+    smpl_rc = smpl_group.pivot(
+        index="버스정류장ARS번호_Text",
+        columns="사용년월",
+        values="총승차승객수"
+        ).loc[:, per_bef[0]:per_aft[1]].dropna()
+    smpl1 = smpl_rc.loc[:,per_bef[0]:per_bef[1]]
+    smpl2 = smpl_rc.loc[:,per_aft[0]:per_aft[1]]
+    mu_1 = smpl1.mean(axis=1).to_list()
+    mu_2 = smpl2.mean(axis=1).to_list()
+
+    res = scipy.stats.ttest_rel(mu_1, mu_2)
+
+    return res
+
 #%%
 if __name__ == "__main__":
+    run = plugin_neptune(NEPTUNE_API_KEY, NEPTUNE_PROJECT)
     data_dir = "./data"
     encoding = "cp949"
     df_scheme1_dir = f"{data_dir}/정류소별 승차정보_01파일"
@@ -66,25 +90,18 @@ if __name__ == "__main__":
     # 코로나 영향 보기
     smpl = smpl_tmp[~smpl_tmp["버스정류장ARS번호_Text"].isin(rest_lst)]
     
-    smpl_group = smpl.groupby(["사용년월", "버스정류장ARS번호_Text"], as_index=False).sum()
-    smpl_group["총승차승객수"] = sum([smpl_group.iloc[:,i] for i in range(4,29) if i % 2 ==0])
-    smpl_group = smpl_group[["사용년월", "버스정류장ARS번호_Text", "총승차승객수"]]
-    smpl_rc = smpl_group.pivot(index="버스정류장ARS번호_Text", columns="사용년월", values="총승차승객수").loc[:, "201901":"202205"].dropna()
-    smpl1 = smpl_rc.loc[:,:"202005"]
-    smpl2 = smpl_rc.loc[:,"202101":"202205"]
-    mu_1 = smpl1.mean(axis=1).to_list()
+    paired_ttest(smpl, per1_bef, per1_aft)
 
-    mu_2 = smpl2.mean(axis=1).to_list()
-    sum([mu_1[i] - mu_2[i] for i in range(len(mu_1))]) / len(mu_1)
-import matplotlib.pyplot as plt
-    plt.hist(mu_1, bins=1000)
+    run.stop()
 
-
-
-    scipy.stats.levene(mu_1, mu_2)
-    scipy.stats.ttest_ind(mu_1, mu_2, equal_var=False)
-    scipy.stats.ttest_rel(mu_1, mu_2)
-
+    per1_bef = ["201908", "202007"]
+    per1_aft = ["202008", "202107"]
+    per2_bef = ["202001", "202012"]
+    per2_aft = ["202101", "202112"]
+    per3_bef = ["202008", "202105"]
+    per3_aft = ["202108", "202205"]
+    per4_bef = ["202101", "202105"]
+    per4_aft = ["202201", "202205"]
     
 
 

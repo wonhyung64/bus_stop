@@ -89,19 +89,26 @@ if __name__ == "__main__":
 
     # 코로나 영향 보기
     smpl = smpl_tmp[~smpl_tmp["버스정류장ARS번호_Text"].isin(rest_lst)]
-    
-    paired_ttest(smpl, per1_bef, per1_aft)
-
-    run.stop()
 
     per1_bef = ["201908", "202007"]
     per1_aft = ["202008", "202107"]
+
     per2_bef = ["202001", "202012"]
     per2_aft = ["202101", "202112"]
+
     per3_bef = ["202008", "202105"]
     per3_aft = ["202108", "202205"]
+
     per4_bef = ["202101", "202105"]
     per4_aft = ["202201", "202205"]
+    
+    paired_ttest(smpl, per1_bef, per1_aft)
+    paired_ttest(smpl, per2_bef, per2_aft)
+    paired_ttest(smpl, per3_bef, per3_aft)
+    paired_ttest(smpl, per4_bef, per4_aft)
+
+    run.stop()
+
     
 
 

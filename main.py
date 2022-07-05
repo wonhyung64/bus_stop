@@ -107,6 +107,29 @@ if __name__ == "__main__":
     paired_ttest(smpl, per3_bef, per3_aft)
     paired_ttest(smpl, per4_bef, per4_aft)
 
+    rest2_lst_dir = f"{data_dir}/스마트쉼터_20201218.xlsx"
+    rest2_lst = pd.read_excel(rest2_lst_dir, header=None)[0].to_list()
+    rest2_lst = [f"{string:0>5}" for string in rest2_lst]
+
+    smpl2 = smpl_tmp[smpl_tmp["버스정류장ARS번호_Text"].isin(rest2_lst)]
+
+    smpl_group = smpl2.groupby(["사용년월", "버스정류장ARS번호_Text"], as_index=False).sum()
+    smpl_group["총승차승객수"] = sum([smpl_group.iloc[:,i] for i in range(4,29) if i % 2 ==0])
+    smpl_group = smpl_group[["사용년월", "버스정류장ARS번호_Text", "총승차승객수"]]
+    smpl_rc = smpl_group.pivot(
+        index="버스정류장ARS번호_Text",
+        columns="사용년월",
+        values="총승차승객수"
+        ).loc[:, per2_bef[0]:per2_aft[1]].dropna()
+    smpl1 = smpl_rc.loc[:,per2_bef[0]:per2_bef[1]]
+    smpl2 = smpl_rc.loc[:,per2_aft[0]:per2_aft[1]]
+    mu_1 = smpl1.mean(axis=1).to_list()
+    mu_2 = smpl2.mean(axis=1).to_list()
+
+    scipy.stats.wilcoxon(mu_1, mu_2, zero_method="wilcox", correction=False, alternative="two-sided")
+    scipy.stats.wilcoxon(mu_1, mu_2, zero_method="wilcox", correction=False, alternative="less")
+    scipy.stats.wilcoxon(mu_1, mu_2, zero_method="wilcox", correction=False, alternative="greater")
+
     run.stop()
 
     

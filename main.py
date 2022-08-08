@@ -43,6 +43,7 @@ def construct_pop_info():
     df1 = pd.read_csv("C:/Users/USER/Downloads/분기별세대수.csv", encoding="cp949")
     df2 = pd.read_csv("C:/Users/USER/Downloads/월별세대수.csv", encoding="cp949")
     df_merged = df2.merge(df1, how="right", on=["main_address", "sub_address", "항목"])
+    df_org = df_merged.copy()
 
     df_pop = pd.DataFrame(columns=df_org.columns)
     for i in range(len(df_org)):
@@ -65,6 +66,3 @@ def construct_pop_info():
 #%%
 if __name__ == "__main__":
     main()
-
-
-

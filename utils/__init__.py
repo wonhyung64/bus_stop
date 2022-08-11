@@ -35,4 +35,5 @@ from .analysis_utils import (
     calculate_mean,
     test_covid_effect,
     test_shelter_effect,
+    extract_mean_pair,
 )

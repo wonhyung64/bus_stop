@@ -10,18 +10,20 @@ def load_shelters_lst(data_dir, filename):
     return shelters
 
 
-def paired_ttest(smpl, per_bef, per_aft):
+def extract_mean_pair(smpl, per_bef, per_aft):
     smpl_rc = recon_smpl(smpl, per_bef, per_aft)
     mu_1, mu_2 = calculate_mean(smpl_rc, per_bef, per_aft)
+
+    return mu_1, mu_2
+
+def paired_ttest(mu_1, mu_2):
     smpl_num = len(mu_1)
     res = scipy.stats.ttest_rel(mu_1, mu_2)
 
     return smpl_num, res
 
 
-def wilcoxon_test(smpl, per_bef, per_aft):
-    smpl_rc = recon_smpl(smpl, per_bef, per_aft)
-    mu_1, mu_2 = calculate_mean(smpl_rc, per_bef, per_aft)
+def wilcoxon_test(mu_1, mu_2):
     smpl_num = len(mu_1)
     res = scipy.stats.wilcoxon(
         mu_1, mu_2, zero_method="wilcox", correction=False, alternative="two-sided"
@@ -64,7 +66,8 @@ def test_covid_effect(data_dir, smpl_SeungDong, periods):
 
     res_table = pd.DataFrame()
     for per_bef, per_aft, build_day in periods:
-        smpl_num, res = paired_ttest(no_shelter_smpl, per_bef, per_aft)
+        mu_1, mu_2 = extract_mean_pair(no_shelter_smpl, per_bef, per_aft)
+        smpl_num, res = paired_ttest(mu_1, mu_2)
         res_table = res_table.append(
             {
                 "설치시기": build_day,
@@ -86,8 +89,9 @@ def test_shelter_effect(data_dir, smpl_SeungDong, periods):
     res_table = pd.DataFrame()
     for per_bef, per_aft, build_day in periods:
         shelters = load_shelters_lst(data_dir, f"스마트쉼터_{build_day}")
-        smpl_shelter = smpl_SeungDong[smpl_SeungDong["버스정류장ARS번호_Text"].isin(shelters)]
-        smpl_num, res = wilcoxon_test(smpl_shelter, per_bef, per_aft)
+        shelter_smpl = smpl_SeungDong[smpl_SeungDong["버스정류장ARS번호_Text"].isin(shelters)]
+        mu_1, mu_2 = extract_mean_pair(shelter_smpl, per_bef, per_aft)
+        smpl_num, res = wilcoxon_test(mu_1, mu_2)
 
         res_table = res_table.append(
             {

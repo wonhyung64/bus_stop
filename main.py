@@ -79,10 +79,11 @@ def EDA(data_dir, smpl_SeungDong, periods, bool_shelter):
             shelters = load_shelters_lst(data_dir, f"스마트쉼터_{build_day}")
             shelter_smpl = smpl_SeungDong[smpl_SeungDong["버스정류장ARS번호_Text"].isin(shelters)]
         mu_1, mu_2 = extract_mean_pair(shelter_smpl, per_bef, per_aft)
-        draw_boxplot(mu_1, mu_2, build_day, per_bef, per_aft, str_shelter)
+        n = len(mu_1)
+        draw_boxplot(mu_1, mu_2, build_day, per_bef, per_aft, str_shelter, n)
 
 
-def draw_boxplot(mu_1, mu_2, build_day, per_bef, per_aft, str_shelter):
+def draw_boxplot(mu_1, mu_2, build_day, per_bef, per_aft, str_shelter, n):
     plt.style.use('default')
     plt.rcParams['figure.figsize'] = (5, 6)
     plt.rcParams['font.size'] = 10
@@ -91,7 +92,7 @@ def draw_boxplot(mu_1, mu_2, build_day, per_bef, per_aft, str_shelter):
     fig, ax = plt.subplots()
 
     ax.boxplot([mu_1, mu_2])
-    ax.set_title(f"성동구 {build_day[:4]}.{build_day[4:6]}.{build_day[6:]} 기준 ({str_shelter})")
+    ax.set_title(f"성동구 {build_day[:4]}.{build_day[4:6]}.{build_day[6:]} 기준 ({str_shelter}, n={n})")
     ax.set_xticks(ticks=[1,2], labels=[
         f"{per_bef[0][:4]}.{per_bef[0][4:6]}-{per_bef[1][:4]}.{per_bef[1][4:6]}",
         f"{per_aft[0][:4]}.{per_aft[0][4:6]}-{per_aft[1][:4]}.{per_aft[1][4:6]}",
@@ -117,4 +118,4 @@ if __name__ == "__main__":
     )
     smpl_SeungDong = df[df["구명칭"] == "성동구"]
     periods = mk_periods()
-    EDA(data_dir, smpl_SeungDong, periods, bool_shelter=True)
+    EDA(data_dir, smpl_SeungDong, periods, bool_shelter=False)

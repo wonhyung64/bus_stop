@@ -70,14 +70,15 @@ def EDA(data_dir, smpl_SeungDong, periods, bool_shelter):
     for per_bef, per_aft, build_day in periods:
         if bool_shelter: 
             str_shelter = "쉼터O"
+            shelters = load_shelters_lst(data_dir, f"스마트쉼터_{build_day}")
+            shelter_smpl = smpl_SeungDong[smpl_SeungDong["버스정류장ARS번호_Text"].isin(shelters)]
+        else: 
+            str_shelter = "쉼터X"
             no_shelters_lst = load_shelters_lst(data_dir, "스마트쉼터")
             shelter_smpl = smpl_SeungDong[
                 ~smpl_SeungDong["버스정류장ARS번호_Text"].isin(no_shelters_lst)
             ]
-        else: 
-            str_shelter = "쉼터X"
-            shelters = load_shelters_lst(data_dir, f"스마트쉼터_{build_day}")
-            shelter_smpl = smpl_SeungDong[smpl_SeungDong["버스정류장ARS번호_Text"].isin(shelters)]
+
         mu_1, mu_2 = extract_mean_pair(shelter_smpl, per_bef, per_aft)
         n = len(mu_1)
         draw_boxplot(mu_1, mu_2, build_day, per_bef, per_aft, str_shelter, n)
@@ -118,4 +119,4 @@ if __name__ == "__main__":
     )
     smpl_SeungDong = df[df["구명칭"] == "성동구"]
     periods = mk_periods()
-    EDA(data_dir, smpl_SeungDong, periods, bool_shelter=False)
+    EDA(data_dir, smpl_SeungDong, periods, bool_shelter=True)

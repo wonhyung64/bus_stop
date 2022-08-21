@@ -37,3 +37,13 @@ from .analysis_utils import (
     test_shelter_effect,
     extract_mean_pair,
 )
+
+from .eda_utils import (
+    eda,
+    draw_boxplot,
+    format_func,
+)
+
+from .population_utils import (
+    construct_pop_info,
+)

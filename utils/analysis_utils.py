@@ -16,6 +16,7 @@ def extract_mean_pair(smpl, per_bef, per_aft):
 
     return mu_1, mu_2
 
+
 def paired_ttest(mu_1, mu_2):
     smpl_num = len(mu_1)
     res = scipy.stats.ttest_rel(mu_1, mu_2)
@@ -26,23 +27,24 @@ def paired_ttest(mu_1, mu_2):
 def wilcoxon_test(mu_1, mu_2):
     smpl_num = len(mu_1)
     res = scipy.stats.wilcoxon(
-        mu_1, mu_2, zero_method="wilcox", correction=False, alternative="two-sided"
+        mu_1, mu_2, zero_method="wilcox", correction=False, alternative="less"
     )
 
     return smpl_num, res
 
 
 def recon_smpl(smpl, per_bef, per_aft):
-    smpl_group = smpl.groupby(["사용년월", "버스정류장ARS번호_Text"], as_index=False).sum()
+    smpl_group = smpl.groupby(["사용년월", "버스정류장ARS번호_Text", "노선번호"], as_index=False).sum()
     smpl_group["총승차승객수"] = sum(
-        [smpl_group.iloc[:, i] for i in range(4, 29) if i % 2 == 0]
+        [smpl_group.iloc[:, i] for i in range(5, 30) if i % 2 == 0]
     )
-    smpl_group = smpl_group[["사용년월", "버스정류장ARS번호_Text", "총승차승객수"]]
+    smpl_group = smpl_group[["사용년월", "버스정류장ARS번호_Text", "노선번호", "총승차승객수"]]
     smpl_rc = (
-        smpl_group.pivot(index="버스정류장ARS번호_Text", columns="사용년월", values="총승차승객수")
-        .loc[:, per_bef[0] : per_aft[1]]
-        .dropna()
-    )
+        smpl_group.pivot(
+            index=["버스정류장ARS번호_Text", "노선번호"], columns="사용년월", values="총승차승객수"
+        ).loc[:, per_bef[0] : per_aft[1]]
+    ).dropna()
+    smpl_rc = smpl_rc.sum(axis=0, level=0)
 
     return smpl_rc
 
@@ -54,8 +56,6 @@ def calculate_mean(smpl_rc, per_bef, per_aft):
     mu_2 = smpl2.mean(axis=1).to_list()
 
     return mu_1, mu_2
-
-    # 코로나 영향 보기
 
 
 def test_covid_effect(data_dir, smpl_SeungDong, periods):
@@ -70,19 +70,17 @@ def test_covid_effect(data_dir, smpl_SeungDong, periods):
         smpl_num, res = paired_ttest(mu_1, mu_2)
         res_table = res_table.append(
             {
-                "설치시기": build_day,
-                "설치 전 기간": f"{per_bef[0]}-{per_bef[1]}",
-                "설치 후 기간": f"{per_aft[0]}-{per_aft[1]}",
-                "Paired T-test 샘플 수": smpl_num,
-                "Paired T-test 통계량": res[0],
-                "Paired T-test 유의확률": res[1],
+                "built_day": build_day,
+                "per_bef": f"{per_bef[0]}-{per_bef[1]}",
+                "per_aft": f"{per_aft[0]}-{per_aft[1]}",
+                "sample #": smpl_num,
+                "stats": res[0],
+                "p-value": res[1],
             },
             ignore_index=True,
         )
 
     return res_table
-
-    # 코로나 영향 없는곳 쉼터 영향 보기
 
 
 def test_shelter_effect(data_dir, smpl_SeungDong, periods):
@@ -95,12 +93,12 @@ def test_shelter_effect(data_dir, smpl_SeungDong, periods):
 
         res_table = res_table.append(
             {
-                "설치시기": build_day,
-                "설치 전 기간": f"{per_bef[0]}-{per_bef[1]}",
-                "설치 후 기간": f"{per_aft[0]}-{per_aft[1]}",
-                "Wilcoxon test 샘플 수": smpl_num,
-                "Wilcoxon test 통계량": res[0],
-                "Wilcoxon test 유의확률": res[1],
+                "built_day": build_day,
+                "per_bef": f"{per_bef[0]}-{per_bef[1]}",
+                "per_aft": f"{per_aft[0]}-{per_aft[1]}",
+                "sample #": smpl_num,
+                "stats": res[0],
+                "p_value": res[1],
             },
             ignore_index=True,
         )
